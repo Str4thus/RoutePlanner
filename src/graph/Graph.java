@@ -5,6 +5,8 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import util.XMLReader;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -14,6 +16,7 @@ public class Graph {
     private ArrayList<Node> nodes = new ArrayList<>();
     private HashMap<String, LinkedList<Edge>> edges = new HashMap<>(); // edges[nodeId] = sorted list of edges OUTGOING from the node
     private HashMap<String, Integer> nodeLookupMap = new HashMap<>();
+    private Route lastRoute;
 
     public Graph(String filename) {
         source = XMLReader.readXMLFile(filename);
@@ -28,19 +31,34 @@ public class Graph {
         return edges;
     }
 
+    public void exportRoute(String filename) {
+        if (lastRoute == null)
+            return;
+
+        try {
+            FileWriter fileWriter = new FileWriter(filename + ".txt");
+            fileWriter.write(lastRoute.toString());
+            fileWriter.close();
+            System.out.println("Wrote file.");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     public Route findShortestPath(String start, String end) {
+        for (Node node : nodes) {
+            node.resetForPathFinding();
+        }
+
         Node startNode = nodes.get(nodeLookupMap.get(start));
         Node endNode = nodes.get(nodeLookupMap.get(end));
-
-        System.out.println("FROM: " + startNode.getId());
-        System.out.println("TO: " + endNode.getId());
 
         startNode.shortestDistanceFromStart = 0;
 
         scanNode(startNode, endNode);
 
-        return new Route(endNode);
+        lastRoute = new Route(endNode);
+        return lastRoute;
     }
 
     private void scanNode(Node node, Node target) {

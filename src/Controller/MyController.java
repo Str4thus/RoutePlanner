@@ -20,7 +20,24 @@ public class MyController{
         return graph.getNodes();
     }
 
+    public ArrayList<String> getNodeIds() {
+        ArrayList<String> ids = new ArrayList<>();
+
+        for (Node node : graph.getNodes()) {
+            ids.add(node.getId());
+        }
+
+        return ids;
+    }
+
     public Route findShortestPath(String start, String end) {
+        if (start == null || end == null)
+            return null;
+
         return graph.findShortestPath(start, end);
+    }
+
+    public void exportRoute(String filename) {
+        graph.exportRoute(filename);
     }
 }

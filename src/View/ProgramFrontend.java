@@ -4,6 +4,7 @@ import controller.MyController;
 import graph.Edge;
 import graph.Node;
 import graph.Route;
+import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -11,10 +12,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Paint;
@@ -42,7 +40,7 @@ public class ProgramFrontend {
 
     public void setPrimaryStage(){
         primaryStage.setTitle("Routenplaner");
-        primaryStage.setScene(menuScene);
+        primaryStage.setScene(mainScene);
         primaryStage.setResizable(false);
         primaryStage.show();
     }
@@ -111,29 +109,77 @@ public class ProgramFrontend {
         newRouteRoot.setPadding(new Insets(30));
 
         Button exportButton = new Button("Exportieren");
-        Button saveButton = new Button("Speichern");
         Button calculateRouteButton = new Button("Route Berechnen");
-        Button nRouteBackButton = new Button("<-");
-        nRouteBackButton.setOnAction((event) -> {
-            primaryStage.setScene(menuScene);
-        });
-        nRouteBackButton.setMinSize(55,55);
-        nRouteBackButton.setFont(Font.font(20));
 
         Label enterStart = new Label("Start:");
         Label enterEnd = new Label("Ziel:");
         Label routeName = new Label("Routenname:");
 
-        TextField startTextField = new TextField();
-        TextField endTextField = new TextField();
+        ComboBox<String> startComboBox = new ComboBox<>();
+        ComboBox<String> endComboBox = new ComboBox<>();
+
+        Image mapImage = new Image("map.png", 500, 500, true, false); // gets resized to (w,h) = (422,500)
+        Canvas canvas = new Canvas(mapImage.getWidth(), mapImage.getHeight());
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+
+        //TextField startTextField = new TextField();
+        //TextField endTextField = new TextField();
         TextField routeNameInput = new TextField();
         TextArea bigRouteOutput = new TextArea();
         bigRouteOutput.setMinSize(60, 300);
 
 
-        calculateRouteButton.setFont(Font.font(font, 25));
+        startComboBox.setItems(FXCollections.observableList(controller.getNodeIds()));
+        endComboBox.setItems(FXCollections.observableList(controller.getNodeIds()));
+
+        calculateRouteButton.setFont(Font.font(font, 15));
+        calculateRouteButton.setOnAction(e -> {
+            Route route = controller.findShortestPath(startComboBox.getValue(), endComboBox.getValue());
+            if (route == null) // prevent empty combo boxes from failing
+                return;
+
+            bigRouteOutput.clear();
+            bigRouteOutput.setText(route.toString());
+
+            // Clear all nodes/edges
+            gc.drawImage(mapImage, 0, 0, canvas.getWidth(), canvas.getHeight());
+
+            gc.setFill(Paint.valueOf("red"));
+            gc.setStroke(Paint.valueOf("red"));
+            gc.setLineWidth(5d);
+            for (int i = 0; i < route.size(); i++) {
+                Node currentNode = route.get(i);
+
+                if (i == 0) {
+                    gc.setFill(Paint.valueOf("blue"));
+                    gc.fillOval(currentNode.getXpos(), currentNode.getYpos(), 20, 20);
+                    gc.setFill(Paint.valueOf("red"));
+                } else if (i == route.size() - 1) {
+                    gc.setFill(Paint.valueOf("blue"));
+                    gc.fillOval(currentNode.getXpos(), currentNode.getYpos(), 20, 20);
+                    gc.setFill(Paint.valueOf("red"));
+                } else {
+                    gc.fillOval(currentNode.getXpos(), currentNode.getYpos(), 5, 5);
+                }
+
+                if (i < route.size()-1) {
+                    Edge edge = route.get(i).getEdgeTo(route.get(i + 1));
+                    gc.strokeLine(currentNode.getXpos(), currentNode.getYpos(), edge.getB().getXpos(), edge.getB().getYpos());
+                }
+            }
+            gc.setFill(Paint.valueOf("black"));
+            gc.setStroke(Paint.valueOf("black"));
+            gc.setLineWidth(2d);
+        });
+
         exportButton.setFont(Font.font(font, 20));
-        saveButton.setFont(Font.font(font, 20));
+        exportButton.setOnAction(e -> {
+            String filename = routeNameInput.getText();
+            if (filename.isEmpty())
+                filename = "route";
+
+            controller.exportRoute(filename);
+        });
 
         enterStart.setFont(Font.font(font, 20));
         enterEnd.setFont(Font.font(font, 20));
@@ -144,19 +190,21 @@ public class ProgramFrontend {
         HBox hBoxLeftSide1 = new HBox();
         VBox vBoxInside1 = new VBox();
         VBox vBoxInside2 = new VBox(10);
-        HBox startHBox = new HBox(5);
-        HBox endHBox = new HBox(5);
+        VBox startVBox = new VBox(5);
+        VBox endVBox = new VBox(5);
         VBox vBoxMainLeft = new VBox(20);
 
         HBox hBoxLeftSide2 = new HBox(30);
-        hBoxLeftSide2.getChildren().addAll(nRouteBackButton, calculateRouteButton);
+        hBoxLeftSide2.getChildren().addAll(calculateRouteButton);
 
         HBox routeNameHBox = new HBox(5);
         routeNameHBox.getChildren().addAll(routeName, routeNameInput);
 
-        startHBox.getChildren().addAll(enterStart, startTextField);
-        endHBox.getChildren().addAll(enterEnd, endTextField);
-        vBoxInside2.getChildren().addAll(startHBox, endHBox);
+
+        startVBox.getChildren().addAll(enterStart, startComboBox);
+        endVBox.getChildren().addAll(enterEnd, endComboBox);
+
+        vBoxInside2.getChildren().addAll(startVBox, endVBox);
         vBoxInside1.getChildren().addAll(vBoxInside2);
         hBoxLeftSide1.getChildren().addAll(vBoxInside1);
         vBoxMainLeft.getChildren().addAll(hBoxLeftSide1, bigRouteOutput);
@@ -164,10 +212,7 @@ public class ProgramFrontend {
 
 
 
-        // Image Stuff
-        Image mapImage = new Image("map.png", 500, 500, true, false); // gets resized to (w,h) = (422,500)
-        Canvas canvas = new Canvas(mapImage.getWidth(), mapImage.getHeight());
-        GraphicsContext gc = canvas.getGraphicsContext2D();
+        // Draw Stuff
         gc.drawImage(mapImage, 0, 0, canvas.getWidth(), canvas.getHeight());
 
         /*
@@ -210,7 +255,7 @@ public class ProgramFrontend {
         VBox rightMainVBox = new VBox(20);
         HBox saveExportHBox = new HBox(10);
         saveExportHBox.setAlignment(Pos.BOTTOM_RIGHT);
-        saveExportHBox.getChildren().addAll(exportButton, saveButton);
+        saveExportHBox.getChildren().addAll(exportButton);
         rightMainVBox.getChildren().addAll(canvas, saveExportHBox);
 
 
@@ -222,12 +267,6 @@ public class ProgramFrontend {
     public void routeListGeneral() {
         routeListRoot.setPadding(new Insets(30));
 
-        Button rListBackButton = new Button("<-");
-        rListBackButton.setOnAction((event) -> {
-            primaryStage.setScene(menuScene);
-        });
-        rListBackButton.setMinSize(55,55);
-        rListBackButton.setFont(Font.font(20));
 
         Label rankingTitle = new Label("Liste der gespeicherten Routen");
         rankingTitle.setFont(Font.font(font, 30));
@@ -236,6 +275,5 @@ public class ProgramFrontend {
         routeList.setAlignment(Pos.CENTER);
 
         routeList.getChildren().addAll(rankingTitle);
-        routeListRoot.getChildren().addAll(rListBackButton, routeList);
     }
 }

@@ -5,7 +5,7 @@ import java.util.LinkedList;
 // X -> LON
 // Y -> LAT
 public class Node {
-    public boolean wasVisited = false; // TODO MAKE PRIVATE
+    public boolean wasVisited = false;
     public Node previousNode = null;
     public float shortestDistanceFromStart = Float.MAX_VALUE;
 
@@ -26,6 +26,12 @@ public class Node {
 
         this.xpos = 225 + (( 10.9602165f- this.lon) * -pixelPerLon);
         this.ypos = 50 + (( 54.3584108f- this.lat) * pixelPerLat);
+    }
+
+    public void resetForPathFinding() {
+        wasVisited = false;
+        previousNode = null;
+        shortestDistanceFromStart = Float.MAX_VALUE;
     }
 
     public float getXpos() {

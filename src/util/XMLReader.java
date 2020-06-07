@@ -19,7 +19,7 @@ public class XMLReader {
             DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
             doc = documentBuilder.parse(xmlFile);
-            doc.getDocumentElement().normalize(); // TODO maybe don't?
+            doc.getDocumentElement().normalize();
 
         } catch (ParserConfigurationException | SAXException | IOException e) {
             e.printStackTrace();
