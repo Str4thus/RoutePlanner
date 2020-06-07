@@ -1,6 +1,9 @@
-package View;
+package view;
 
-import Controller.MyController;
+import controller.MyController;
+import graph.Edge;
+import graph.Node;
+import graph.Route;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -13,9 +16,8 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
-import javafx.scene.shape.Line;
+import javafx.scene.paint.Paint;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
@@ -31,9 +33,11 @@ public class ProgramFrontend {
     private Stage primaryStage;
     private String font = "Comic Sans MS";
 
+    private MyController controller;
 
     public void init(Stage primaryStage, MyController myController)  {
         this.primaryStage = primaryStage;
+        this.controller = myController;
     }
 
     public void setPrimaryStage(){
@@ -173,6 +177,35 @@ public class ProgramFrontend {
             here goes the code for drawing the nodes onto the canvas
          */
 
+
+        for (Node node : controller.getNodes()) {
+            gc.fillOval(node.getXpos(), node.getYpos(), 2, 2);
+
+            for (Edge edge : node.getEdges()) {
+                gc.strokeLine(node.getXpos(), node.getYpos(), edge.getB().getXpos(), edge.getB().getYpos());
+            }
+        }
+/*
+        //Route route = controller.findShortestPath("HEILIGENHAFEN - MITTE (A 1)", "LENSAHN (A 1)");
+        //Route route = controller.findShortestPath("KREUZ DÜSSELDORF - NORD  (Südteil)", "BERLIN - KAISERDAMM (A 100)");
+        //Route route = controller.findShortestPath("HEILIGENHAFEN - MITTE (A 1)", "OBERHACHING (A 995)");
+
+        gc.drawImage(mapImage, 0, 0, canvas.getWidth(), canvas.getHeight());
+        gc.setFill(Paint.valueOf("red"));
+        gc.setStroke(Paint.valueOf("red"));
+        gc.setLineWidth(5d);
+        for (int i = 0; i < route.size(); i++) {
+            Node currentNode = route.get(i);
+            gc.fillOval(currentNode.getXpos(), currentNode.getYpos(), 5, 5);
+
+            if (i < route.size()-1) {
+                Edge edge = route.get(i).getEdgeTo(route.get(i + 1));
+                gc.strokeLine(currentNode.getXpos(), currentNode.getYpos(), edge.getB().getXpos(), edge.getB().getYpos());
+            }
+        }
+        gc.setFill(Paint.valueOf("black"));
+        gc.setStroke(Paint.valueOf("black"));
+        gc.setLineWidth(2d);*/
 
         VBox rightMainVBox = new VBox(20);
         HBox saveExportHBox = new HBox(10);

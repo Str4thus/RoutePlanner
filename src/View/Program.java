@@ -1,8 +1,8 @@
-package View;
+package view;
 
 import javafx.application.Application;
 import javafx.stage.Stage;
-import Controller.MyController;
+import controller.MyController;
 
 public class Program extends Application {
     private ProgramFrontend programFrontend;
